@@ -13,6 +13,7 @@ export interface Student {
   last_message?: string;
   last_message_time?: string;
   unread_count: number;
+  photoUrl?: string | null;
 }
 
 interface StudentListProps {
@@ -42,7 +43,12 @@ const StudentList: React.FC<StudentListProps> = ({
         console.log('Fetched students:', response.data);
         
         if (Array.isArray(response.data)) {
-          const allStudents = response.data.filter((student: Student) => student !== null);
+          const allStudents = response.data
+            .filter((student: Student) => student !== null)
+            .map((student: any) => ({
+              ...student,
+              photoUrl: student.photo_url
+            }));
           console.log('Filtered students:', allStudents);
           setStudents(allStudents);
         } else {
@@ -113,10 +119,17 @@ const StudentList: React.FC<StudentListProps> = ({
             }`}
           >
             <div className="flex items-center">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-medium ${
-                selectedStudentId === student.id.toString() ? 'bg-white text-primary' : 'bg-primary'
-              }`}>
-                {student.name.charAt(0)}{student.surname.charAt(0)}
+              <div 
+                className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-medium overflow-hidden ${
+                  selectedStudentId === student.id.toString() ? 'bg-white text-primary' : 'bg-primary'
+                }`}
+                style={{
+                  backgroundImage: student.photoUrl ? `url(${student.photoUrl})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                {!student.photoUrl && `${student.name.charAt(0)}${student.surname.charAt(0)}`}
               </div>
               
               <div className="ml-3 flex-1">

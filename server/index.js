@@ -55,14 +55,102 @@ const upload = multer({
 });
 
 // Initialize database connection
-async function initializeDatabase() {
+const initializeDatabase = async () => {
   try {
-    await connectDB();
+    const pool = await connectDB();
     console.log('Database connection established');
-  } catch (err) {
-    console.error('Database connection failed:', err);
+
+    // Check if photo_url column exists in students table
+    const checkStudentsColumnQuery = `
+      SELECT COUNT(*) as columnExists
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_NAME = 'students'
+      AND COLUMN_NAME = 'photo_url'
+    `;
+    
+    const studentsColumnCheck = await pool.request().query(checkStudentsColumnQuery);
+    const studentsColumnExists = studentsColumnCheck.recordset[0].columnExists > 0;
+
+    if (!studentsColumnExists) {
+      // Add photo_url column if it doesn't exist
+      await pool.request().query(`
+        ALTER TABLE students
+        ADD photo_url NVARCHAR(MAX)
+      `);
+      console.log('Added photo_url column to students table');
+    } else {
+      console.log('photo_url column already exists in students table');
+    }
+
+    // Check if photo_url column exists in advisors table
+    const checkAdvisorsColumnQuery = `
+      SELECT COUNT(*) as columnExists
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_NAME = 'advisors'
+      AND COLUMN_NAME = 'photo_url'
+    `;
+    
+    const advisorsColumnCheck = await pool.request().query(checkAdvisorsColumnQuery);
+    const advisorsColumnExists = advisorsColumnCheck.recordset[0].columnExists > 0;
+
+    if (!advisorsColumnExists) {
+      // Add photo_url column if it doesn't exist
+      await pool.request().query(`
+        ALTER TABLE advisors
+        ADD photo_url NVARCHAR(MAX)
+      `);
+      console.log('Added photo_url column to advisors table');
+    } else {
+      console.log('photo_url column already exists in advisors table');
+    }
+
+    // Danışmanlar tablosuna yeni sütunlar ekle
+    await pool.request().query(`
+      IF NOT EXISTS (
+        SELECT * FROM sys.columns 
+        WHERE object_id = OBJECT_ID('advisors') AND name = 'office_number'
+      )
+      BEGIN
+        ALTER TABLE advisors ADD office_number VARCHAR(20)
+      END
+    `);
+
+    await pool.request().query(`
+      IF NOT EXISTS (
+        SELECT * FROM sys.columns 
+        WHERE object_id = OBJECT_ID('advisors') AND name = 'office_hours_start'
+      )
+      BEGIN
+        ALTER TABLE advisors ADD office_hours_start TIME
+      END
+    `);
+
+    await pool.request().query(`
+      IF NOT EXISTS (
+        SELECT * FROM sys.columns 
+        WHERE object_id = OBJECT_ID('advisors') AND name = 'office_hours_end'
+      )
+      BEGIN
+        ALTER TABLE advisors ADD office_hours_end TIME
+      END
+    `);
+
+    await pool.request().query(`
+      IF NOT EXISTS (
+        SELECT * FROM sys.columns 
+        WHERE object_id = OBJECT_ID('advisors') AND name = 'office_days'
+      )
+      BEGIN
+        ALTER TABLE advisors ADD office_days VARCHAR(50)
+      END
+    `);
+
+    console.log('Database initialization completed');
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+    throw error;
   }
-}
+};
 
 // Initialize database on startup
 initializeDatabase();
@@ -132,7 +220,13 @@ app.post('/api/auth/login', async (req, res) => {
           name: advisor.name,
           surname: advisor.surname,
           email: advisor.email,
-          role: 'advisor'
+          username: advisor.username,
+          role: 'advisor',
+          photoUrl: advisor.photo_url,
+          officeNumber: advisor.office_number,
+          officeHoursStart: advisor.office_hours_start,
+          officeHoursEnd: advisor.office_hours_end,
+          officeDays: advisor.office_days
         };
         console.log('Sending advisor response:', response);
         res.json(response);
@@ -169,7 +263,8 @@ app.post('/api/auth/login', async (req, res) => {
           surname: student.surname,
           email: student.email,
           studentId: student.student_id,
-          role: 'student'
+          role: 'student',
+          photoUrl: student.photo_url
         };
         console.log('Sending student response:', response);
         res.json(response);
@@ -201,6 +296,17 @@ app.post('/api/setup', async (req, res) => {
           read BIT DEFAULT 0,
           created_at DATETIME DEFAULT GETDATE()
         )
+      END
+    `);
+                  
+    // Students tablosuna photo_url sütunu ekle
+    await pool.request().query(`
+      IF NOT EXISTS (
+        SELECT * FROM sys.columns 
+        WHERE object_id = OBJECT_ID('students') AND name = 'photo_url'
+      )
+      BEGIN
+        ALTER TABLE students ADD photo_url NVARCHAR(MAX)
       END
     `);
 
@@ -384,7 +490,8 @@ app.get('/api/advisor/:advisorId/students', async (req, res) => {
           student_id,
           name,
           surname,
-          email
+          email,
+          photo_url
         FROM students
         WHERE id IN (${studentIds.join(',')})
       `);
@@ -564,6 +671,484 @@ app.patch('/api/messages/:messageId/read', async (req, res) => {
   } catch (err) {
     console.error('Error marking message as read:', err);
     res.status(500).json({ error: 'Failed to mark message as read' });
+  }
+});
+
+// Tüm danışmanları getir
+app.get('/api/advisors', async (req, res) => {
+  try {
+    const pool = await connectDB();
+    
+    const result = await pool.request()
+      .query(`
+        SELECT 
+          id,
+          name,
+          surname,
+          email,
+          username,
+          photo_url,
+          office_number,
+          office_hours_start,
+          office_hours_end,
+          office_days
+        FROM advisors
+        ORDER BY name, surname
+      `);
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('Error fetching advisors:', err);
+    res.status(500).json({ error: 'Danışman listesi alınırken bir hata oluştu' });
+  }
+});
+
+// Öğrenci profilini güncelle
+app.put('/api/student/:studentId/profile', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { name, surname, email } = req.body;
+    
+    const pool = await connectDB();
+    
+    const result = await pool.request()
+      .input('studentId', sql.Int, parseInt(studentId))
+      .input('name', sql.VarChar, name)
+      .input('surname', sql.VarChar, surname)
+      .input('email', sql.VarChar, email)
+      .query(`
+        UPDATE students 
+        SET name = @name, surname = @surname, email = @email
+        WHERE id = @studentId
+      `);
+
+    if (result.rowsAffected[0] > 0) {
+      // Güncellenmiş öğrenci bilgilerini getir
+      const updatedStudent = await pool.request()
+        .input('studentId', sql.Int, parseInt(studentId))
+        .query(`
+          SELECT id, name, surname, email, student_id
+          FROM students
+          WHERE id = @studentId
+        `);
+
+      res.json(updatedStudent.recordset[0]);
+    } else {
+      res.status(404).json({ error: 'Öğrenci bulunamadı' });
+    }
+  } catch (err) {
+    console.error('Error updating student profile:', err);
+    res.status(500).json({ error: 'Profil güncellenirken bir hata oluştu' });
+  }
+});
+
+// Öğrenci profil fotoğrafını güncelle
+app.put('/api/student/:studentId/profile-photo', upload.single('photo'), async (req, res) => {
+  let pool;
+  try {
+    const { studentId } = req.params;
+    console.log('Updating profile photo for student:', studentId);
+    
+    if (!req.file) {
+      console.log('No file uploaded');
+      return res.status(400).json({ error: 'Fotoğraf yüklenmedi' });
+    }
+
+    console.log('File details:', {
+      originalName: req.file.originalname,
+      filename: req.file.filename,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    });
+
+    // Veritabanı bağlantısı
+    pool = await connectDB();
+    
+    // Önce öğrencinin var olup olmadığını kontrol et
+    const studentCheck = await pool.request()
+      .input('studentId', sql.Int, parseInt(studentId))
+      .query('SELECT id FROM students WHERE id = @studentId');
+
+    if (studentCheck.recordset.length === 0) {
+      console.log('Student not found:', studentId);
+      return res.status(404).json({ error: 'Öğrenci bulunamadı' });
+    }
+
+    // Tam URL oluştur
+    const baseUrl = `http://localhost:${port}`;
+    const photoUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    console.log('Generated photo URL:', photoUrl);
+
+    // Profil fotoğrafı URL'ini güncelle
+    const updateResult = await pool.request()
+      .input('studentId', sql.Int, parseInt(studentId))
+      .input('photoUrl', sql.VarChar, photoUrl)
+      .query(`
+        UPDATE students 
+        SET photo_url = @photoUrl
+        WHERE id = @studentId;
+        
+        SELECT id, name, surname, email, student_id, photo_url
+        FROM students
+        WHERE id = @studentId;
+      `);
+
+    console.log('Update result:', {
+      rowsAffected: updateResult.rowsAffected[0],
+      studentId,
+      photoUrl,
+      updatedStudent: updateResult.recordset[0]
+    });
+
+    if (updateResult.rowsAffected[0] > 0) {
+      res.json({ 
+        photoUrl,
+        student: updateResult.recordset[0]
+      });
+    } else {
+      console.log('Update failed for student:', studentId);
+      res.status(500).json({ error: 'Profil fotoğrafı güncellenemedi' });
+    }
+  } catch (err) {
+    console.error('Error updating profile photo:', err);
+    console.error('Error details:', {
+      message: err.message,
+      code: err.code,
+      state: err.state,
+      class: err.class,
+      lineNumber: err.lineNumber,
+      stack: err.stack
+    });
+
+    // Hata türüne göre özel mesajlar
+    let errorMessage = 'Profil fotoğrafı güncellenirken bir hata oluştu';
+    if (err.code === 'EREQUEST') {
+      errorMessage = 'Veritabanı işlemi sırasında bir hata oluştu';
+    } else if (err.code === 'ECONNREFUSED') {
+      errorMessage = 'Veritabanına bağlanılamadı';
+    }
+
+    res.status(500).json({ 
+      error: errorMessage,
+      details: err.message
+    });
+  }
+});
+
+// Danışman profilini güncelle
+app.put('/api/advisor/:advisorId', async (req, res) => {
+  try {
+    const { advisorId } = req.params;
+    const { name, surname, email, username, officeNumber, officeHoursStart, officeHoursEnd, officeDays } = req.body;
+    
+    console.log('Received update request:', {
+      advisorId,
+      body: req.body
+    });
+
+    const pool = await connectDB();
+
+    // First check if the advisor exists
+    const advisorCheck = await pool.request()
+      .input('advisorId', sql.Int, parseInt(advisorId))
+      .query('SELECT id FROM advisors WHERE id = @advisorId');
+
+    if (advisorCheck.recordset.length === 0) {
+      return res.status(404).json({ error: 'Danışman bulunamadı' });
+    }
+
+    // Format time values if they exist
+    const formatTimeForDB = (time) => {
+      if (!time) return null;
+      // If it's already in HH:mm format, add seconds
+      if (time.match(/^\d{2}:\d{2}$/)) {
+        return `${time}:00`;
+      }
+      // If it's a full date string, extract just the time part
+      try {
+        const date = new Date(time);
+        return date.toTimeString().slice(0, 8);
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const formattedStartTime = formatTimeForDB(officeHoursStart);
+    const formattedEndTime = formatTimeForDB(officeHoursEnd);
+
+    console.log('Formatted times:', {
+      originalStart: officeHoursStart,
+      formattedStart: formattedStartTime,
+      originalEnd: officeHoursEnd,
+      formattedEnd: formattedEndTime
+    });
+    
+    const result = await pool.request()
+      .input('name', sql.VarChar, name)
+      .input('surname', sql.VarChar, surname)
+      .input('email', sql.VarChar, email)
+      .input('username', sql.VarChar, username)
+      .input('officeNumber', sql.VarChar, officeNumber)
+      .input('officeHoursStart', sql.VarChar, formattedStartTime)
+      .input('officeHoursEnd', sql.VarChar, formattedEndTime)
+      .input('officeDays', sql.VarChar, officeDays)
+      .input('advisorId', sql.Int, parseInt(advisorId))
+      .query(`
+        UPDATE advisors 
+        SET name = @name,
+            surname = @surname,
+            email = @email,
+            username = @username,
+            office_number = @officeNumber,
+            office_hours_start = @officeHoursStart,
+            office_hours_end = @officeHoursEnd,
+            office_days = @officeDays
+        WHERE id = @advisorId;
+        
+        SELECT 
+          id,
+          name,
+          surname,
+          email,
+          username,
+          photo_url,
+          office_number,
+          office_hours_start,
+          office_hours_end,
+          office_days
+        FROM advisors
+        WHERE id = @advisorId;
+      `);
+
+    console.log('Update result:', {
+      rowsAffected: result.rowsAffected[0],
+      updatedRecord: result.recordset[0]
+    });
+
+    if (result.rowsAffected[0] > 0) {
+      res.json(result.recordset[0]);
+    } else {
+      res.status(404).json({ error: 'Danışman bulunamadı' });
+    }
+  } catch (err) {
+    console.error('Error updating advisor:', err);
+    console.error('Error details:', {
+      message: err.message,
+      code: err.code,
+      state: err.state,
+      class: err.class,
+      lineNumber: err.lineNumber,
+      stack: err.stack
+    });
+    res.status(500).json({ 
+      error: 'Danışman güncellenirken bir hata oluştu',
+      details: err.message
+    });
+  }
+});
+
+// Danışman profil fotoğrafını güncelle
+app.put('/api/advisor/:advisorId/profile-photo', upload.single('photo'), async (req, res) => {
+  let pool;
+  try {
+    const { advisorId } = req.params;
+    console.log('Updating profile photo for advisor:', advisorId);
+    
+    if (!req.file) {
+      console.log('No file uploaded');
+      return res.status(400).json({ error: 'Fotoğraf yüklenmedi' });
+    }
+
+    console.log('File details:', {
+      originalName: req.file.originalname,
+      filename: req.file.filename,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    });
+
+    // Veritabanı bağlantısı
+    pool = await connectDB();
+    
+    // Önce danışmanın var olup olmadığını kontrol et
+    const advisorCheck = await pool.request()
+      .input('advisorId', sql.Int, parseInt(advisorId))
+      .query('SELECT id FROM advisors WHERE id = @advisorId');
+
+    if (advisorCheck.recordset.length === 0) {
+      console.log('Advisor not found:', advisorId);
+      return res.status(404).json({ error: 'Danışman bulunamadı' });
+    }
+
+    // Tam URL oluştur
+    const baseUrl = `http://localhost:${port}`;
+    const photoUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    console.log('Generated photo URL:', photoUrl);
+
+    // Profil fotoğrafı URL'ini güncelle
+    const updateResult = await pool.request()
+      .input('advisorId', sql.Int, parseInt(advisorId))
+      .input('photoUrl', sql.VarChar, photoUrl)
+      .query(`
+        UPDATE advisors 
+        SET photo_url = @photoUrl
+        WHERE id = @advisorId;
+        
+        SELECT id, name, surname, email, username, photo_url
+        FROM advisors
+        WHERE id = @advisorId;
+      `);
+
+    console.log('Update result:', {
+      rowsAffected: updateResult.rowsAffected[0],
+      advisorId,
+      photoUrl,
+      updatedAdvisor: updateResult.recordset[0]
+    });
+
+    if (updateResult.rowsAffected[0] > 0) {
+      res.json({ 
+        photoUrl,
+        advisor: updateResult.recordset[0]
+      });
+    } else {
+      console.log('Update failed for advisor:', advisorId);
+      res.status(500).json({ error: 'Profil fotoğrafı güncellenemedi' });
+    }
+  } catch (err) {
+    console.error('Error updating profile photo:', err);
+    console.error('Error details:', {
+      message: err.message,
+      code: err.code,
+      state: err.state,
+      class: err.class,
+      lineNumber: err.lineNumber,
+      stack: err.stack
+    });
+
+    // Hata türüne göre özel mesajlar
+    let errorMessage = 'Profil fotoğrafı güncellenirken bir hata oluştu';
+    if (err.code === 'EREQUEST') {
+      errorMessage = 'Veritabanı işlemi sırasında bir hata oluştu';
+    } else if (err.code === 'ECONNREFUSED') {
+      errorMessage = 'Veritabanına bağlanılamadı';
+    }
+
+    res.status(500).json({ 
+      error: errorMessage,
+      details: err.message
+    });
+  }
+});
+
+// Öğrenci profil fotoğrafını sil
+app.delete('/api/student/:studentId/profile-photo', async (req, res) => {
+  let pool;
+  try {
+    const { studentId } = req.params;
+    console.log('Deleting profile photo for student:', studentId);
+    
+    pool = await connectDB();
+    
+    // Önce öğrencinin var olup olmadığını kontrol et
+    const studentCheck = await pool.request()
+      .input('studentId', sql.Int, parseInt(studentId))
+      .query('SELECT id, photo_url FROM students WHERE id = @studentId');
+
+    if (studentCheck.recordset.length === 0) {
+      console.log('Student not found:', studentId);
+      return res.status(404).json({ error: 'Öğrenci bulunamadı' });
+    }
+
+    const student = studentCheck.recordset[0];
+
+    // Eğer fotoğraf varsa, dosyayı sil
+    if (student.photo_url) {
+      const photoPath = path.join(uploadsDir, path.basename(student.photo_url));
+      if (fs.existsSync(photoPath)) {
+        fs.unlinkSync(photoPath);
+        console.log('Deleted photo file:', photoPath);
+      }
+    }
+
+    // Veritabanından fotoğraf URL'ini temizle
+    const updateResult = await pool.request()
+      .input('studentId', sql.Int, parseInt(studentId))
+      .query(`
+        UPDATE students 
+        SET photo_url = NULL
+        WHERE id = @studentId;
+        
+        SELECT id, name, surname, email, student_id, photo_url
+        FROM students
+        WHERE id = @studentId;
+      `);
+
+    if (updateResult.rowsAffected[0] > 0) {
+      res.json({ 
+        student: updateResult.recordset[0]
+      });
+    } else {
+      res.status(500).json({ error: 'Profil fotoğrafı silinemedi' });
+    }
+  } catch (err) {
+    console.error('Error deleting profile photo:', err);
+    res.status(500).json({ error: 'Profil fotoğrafı silinirken bir hata oluştu' });
+  }
+});
+
+// Danışman profil fotoğrafını sil
+app.delete('/api/advisor/:advisorId/profile-photo', async (req, res) => {
+  let pool;
+  try {
+    const { advisorId } = req.params;
+    console.log('Deleting profile photo for advisor:', advisorId);
+    
+    pool = await connectDB();
+    
+    // Önce danışmanın var olup olmadığını kontrol et
+    const advisorCheck = await pool.request()
+      .input('advisorId', sql.Int, parseInt(advisorId))
+      .query('SELECT id, photo_url FROM advisors WHERE id = @advisorId');
+
+    if (advisorCheck.recordset.length === 0) {
+      console.log('Advisor not found:', advisorId);
+      return res.status(404).json({ error: 'Danışman bulunamadı' });
+    }
+
+    const advisor = advisorCheck.recordset[0];
+
+    // Eğer fotoğraf varsa, dosyayı sil
+    if (advisor.photo_url) {
+      const photoPath = path.join(uploadsDir, path.basename(advisor.photo_url));
+      if (fs.existsSync(photoPath)) {
+        fs.unlinkSync(photoPath);
+        console.log('Deleted photo file:', photoPath);
+      }
+    }
+
+    // Veritabanından fotoğraf URL'ini temizle
+    const updateResult = await pool.request()
+      .input('advisorId', sql.Int, parseInt(advisorId))
+      .query(`
+        UPDATE advisors 
+        SET photo_url = NULL
+        WHERE id = @advisorId;
+        
+        SELECT id, name, surname, email, username, photo_url
+        FROM advisors
+        WHERE id = @advisorId;
+      `);
+
+    if (updateResult.rowsAffected[0] > 0) {
+      res.json({ 
+        advisor: updateResult.recordset[0]
+      });
+    } else {
+      res.status(500).json({ error: 'Profil fotoğrafı silinemedi' });
+    }
+  } catch (err) {
+    console.error('Error deleting profile photo:', err);
+    res.status(500).json({ error: 'Profil fotoğrafı silinirken bir hata oluştu' });
   }
 });
 

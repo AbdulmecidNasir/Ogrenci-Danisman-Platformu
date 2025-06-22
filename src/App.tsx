@@ -4,9 +4,11 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import StudentDashboard from './pages/student/Dashboard';
 import AdvisorDashboard from './pages/advisor/Dashboard';
+import Profile from './pages/student/Profile';
 import NotFound from './pages/NotFound';
 import { useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdvisorProfile from './pages/advisor/Profile';
 
 function App() {
   const { isAuthenticated, user } = useAuth();
@@ -27,6 +29,7 @@ function App() {
         <ProtectedRoute allowedRole="student">
           <Routes>
             <Route path="dashboard" element={<StudentDashboard />} />
+            <Route path="profile" element={<Profile />} />
           </Routes>
         </ProtectedRoute>
       } />
@@ -35,6 +38,7 @@ function App() {
         <ProtectedRoute allowedRole="advisor">
           <Routes>
             <Route path="dashboard" element={<AdvisorDashboard />} />
+            <Route path="profile" element={<AdvisorProfile />} />
           </Routes>
         </ProtectedRoute>
       } />

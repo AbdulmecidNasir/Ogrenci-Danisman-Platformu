@@ -18,6 +18,15 @@ const Navbar: React.FC<NavbarProps> = ({ title }) => {
     navigate('/login');
   };
 
+  const handleProfileClick = () => {
+    if (user?.role === 'student') {
+      navigate('/student/profile');
+    } else if (user?.role === 'advisor') {
+      navigate('/advisor/profile');
+    }
+    setIsOpen(false);
+  };
+
   return (
     <nav className="bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,9 +45,22 @@ const Navbar: React.FC<NavbarProps> = ({ title }) => {
                 <span className="text-sm font-medium">{user?.name} {user?.surname}</span>
                 <span className="text-xs text-gray-500">{user?.role === 'student' ? 'Öğrenci' : 'Danışman'}</span>
               </div>
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white">
-                <User size={18} />
-              </div>
+              <button 
+                onClick={handleProfileClick}
+                className="h-8 w-8 rounded-full overflow-hidden bg-primary hover:bg-primary-dark transition-colors"
+              >
+                {user?.photoUrl ? (
+                  <img 
+                    src={user.photoUrl} 
+                    alt={`${user.name} ${user.surname}`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-white">
+                    {user?.name?.charAt(0)}{user?.surname?.charAt(0)}
+                  </div>
+                )}
+              </button>
             </div>
             <button 
               onClick={handleLogout}
@@ -73,9 +95,22 @@ const Navbar: React.FC<NavbarProps> = ({ title }) => {
           >
             <div className="px-4 pt-2 pb-3 space-y-1 border-t">
               <div className="flex items-center py-2">
-                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white">
-                  <User size={18} />
-                </div>
+                <button
+                  onClick={handleProfileClick}
+                  className="h-8 w-8 rounded-full overflow-hidden bg-primary"
+                >
+                  {user?.photoUrl ? (
+                    <img 
+                      src={user.photoUrl} 
+                      alt={`${user.name} ${user.surname}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-white">
+                      {user?.name?.charAt(0)}{user?.surname?.charAt(0)}
+                    </div>
+                  )}
+                </button>
                 <div className="ml-3">
                   <div className="text-sm font-medium">{user?.name} {user?.surname}</div>
                   <div className="text-xs text-gray-500">{user?.role === 'student' ? 'Öğrenci' : 'Danışman'}</div>

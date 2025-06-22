@@ -2,14 +2,19 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-type User = {
-  id: string;
+export interface User {
+  id: number;
   name: string;
   surname: string;
   email: string;
-  studentId?: string;
+  username: string;
   role: 'student' | 'advisor';
-};
+  photoUrl?: string | null;
+  officeNumber?: string;
+  officeHoursStart?: string;
+  officeHoursEnd?: string;
+  officeDays?: string;
+}
 
 type AuthContextType = {
   user: User | null;
@@ -18,6 +23,7 @@ type AuthContextType = {
   login: (credentials: { username: string; password: string; role: string }) => Promise<void>;
   register: (userData: any) => Promise<void>;
   logout: () => void;
+  updateUser: (user: User) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,13 +108,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     register,
-    logout
+    logout,
+    updateUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

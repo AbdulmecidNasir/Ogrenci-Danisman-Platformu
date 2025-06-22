@@ -3,43 +3,29 @@ import { motion } from 'framer-motion';
 import Navbar from '../../components/Navbar';
 import MessageList, { Message } from '../../components/student/MessageList';
 import MessageInput from '../../components/student/MessageInput';
+import AdvisorList, { Advisor } from '../../components/student/AdvisorList';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { messageService } from '../../services/messageService';
 import axios from 'axios';
-
-// Mock advisor data
-const ADVISOR = {
-  id: '1',
-  name: 'Prof. Dr. Mehmet',
-  surname: 'Yılmaz',
-};
-
-// Mock initial messages
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: '1',
-    content: 'Merhaba, ben danışmanınız Prof. Dr. Mehmet Yılmaz. Herhangi bir sorunuz olduğunda bana mesaj gönderebilirsiniz.',
-    timestamp: '15:30',
-    sender: 'advisor',
-    senderName: 'Prof. Dr. Mehmet Yılmaz',
-  },
-];
+import { MessageSquare } from 'lucide-react';
 
 const StudentDashboard: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedAdvisorId, setSelectedAdvisorId] = useState<string | null>(null);
+  const [selectedAdvisor, setSelectedAdvisor] = useState<Advisor | null>(null);
   const { user } = useAuth();
 
-  // Fetch messages when component mounts
+  // Seçili danışman değişince mesajları getir
   useEffect(() => {
     const fetchMessages = async () => {
+      if (!selectedAdvisorId || !user) return;
+
       try {
-        if (user) {
-          console.log('Fetching messages for:', { studentId: user.id, advisorId: ADVISOR.id });
-          const fetchedMessages = await messageService.getMessages(user.id, ADVISOR.id);
-          console.log('Fetched messages:', fetchedMessages);
-          setMessages(fetchedMessages);
-        }
+        console.log('Fetching messages for:', { studentId: user.id, advisorId: selectedAdvisorId });
+        const fetchedMessages = await messageService.getMessages(user.id.toString(), selectedAdvisorId);
+        console.log('Fetched messages:', fetchedMessages);
+        setMessages(fetchedMessages);
       } catch (error) {
         console.error('Error fetching messages:', error);
         toast.error('Mesajlar yüklenirken bir hata oluştu');
@@ -47,7 +33,7 @@ const StudentDashboard: React.FC = () => {
     };
 
     fetchMessages();
-  }, [user]);
+  }, [selectedAdvisorId, user]);
 
   // Auto-scroll to bottom of messages when new message is added
   useEffect(() => {
@@ -58,9 +44,9 @@ const StudentDashboard: React.FC = () => {
   }, [messages]);
 
   const handleSendMessage = async (content: string, files: File[]) => {
-    if (!user) {
-      console.error('No user found');
-      toast.error('Oturum açmanız gerekiyor');
+    if (!user || !selectedAdvisorId) {
+      console.error('No user or advisor selected');
+      toast.error('Mesaj göndermek için bir danışman seçmelisiniz');
       return;
     }
 
@@ -92,7 +78,7 @@ const StudentDashboard: React.FC = () => {
         sender: 'student' as const,
         senderName: `${user.name} ${user.surname}`,
         senderId: user.id,
-        receiverId: ADVISOR.id,
+        receiverId: parseInt(selectedAdvisorId),
         attachments,
         read: false
       };
@@ -130,60 +116,61 @@ const StudentDashboard: React.FC = () => {
       
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="flex-1 flex flex-col md:flex-row">
-          {/* Sidebar with advisor info */}
-          <div className="w-full md:w-1/4 p-4 border-r border-gray-200 bg-white">
-            <div className="text-lg font-semibold mb-2">Danışmanınız</div>
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="card p-4"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
-                  {ADVISOR.name.charAt(0)}{ADVISOR.surname.charAt(0)}
-                </div>
-                <div>
-                  <div className="font-medium">{ADVISOR.name} {ADVISOR.surname}</div>
-                  <div className="text-sm text-gray-500">Danışman</div>
-                </div>
-              </div>
-            </motion.div>
-
-            <div className="mt-6">
-              <div className="text-lg font-semibold mb-2">Hızlı Bilgiler</div>
-              <div className="card p-4 space-y-2">
-                <div className="text-sm">
-                  <span className="font-medium">E-posta:</span> {ADVISOR.name.toLowerCase()}.{ADVISOR.surname.toLowerCase()}@university.edu.tr
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Ofis Saatleri:</span> Pazartesi & Çarşamba 14:00-16:00
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Ofis:</span> Mühendislik Fakültesi B-204
-                </div>
-              </div>
-            </div>
+          {/* Sidebar with advisor list */}
+          <div className="w-full md:w-1/3 p-4 border-r border-gray-200 bg-white overflow-y-auto">
+            <AdvisorList
+              selectedAdvisorId={selectedAdvisorId}
+              onSelectAdvisor={setSelectedAdvisorId}
+            />
           </div>
           
           {/* Chat area */}
-          <div className="flex-1 flex flex-col h-full">
-            <div className="p-4 border-b border-gray-200 bg-white">
-              <h2 className="text-lg font-semibold">Mesajlar</h2>
-              <p className="text-sm text-gray-500">
-                Danışmanınızla olan iletişiminiz
-              </p>
-            </div>
-            
-            <div className="flex-1 relative">
-              <div id="messages-container" className="absolute inset-0 overflow-y-auto">
-                <MessageList messages={messages} />
+          <div className="flex-1 flex flex-col">
+            {selectedAdvisorId ? (
+              <>
+                {/* Header */}
+                <div className="p-4 border-b border-gray-200 bg-white flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-medium">
+                    {selectedAdvisor?.name?.charAt(0)}{selectedAdvisor?.surname?.charAt(0)}
+                  </div>
+                  <div className="ml-3">
+                    <h2 className="text-lg font-semibold">{selectedAdvisor?.name} {selectedAdvisor?.surname}</h2>
+                    <div className="flex text-sm text-gray-500">
+                      <span className="flex items-center">
+                        {selectedAdvisor?.email}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 relative">
+                  <div id="messages-container" className="absolute inset-0 overflow-y-auto p-4">
+                    <MessageList messages={messages} />
+                  </div>
+                </div>
+
+                {/* Message Input */}
+                <div className="bg-white border-t border-gray-200">
+                  <MessageInput onSendMessage={handleSendMessage} />
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center bg-gray-50">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center p-8"
+                >
+                  <div className="bg-primary text-white p-4 rounded-full inline-flex items-center justify-center mb-4">
+                    <MessageSquare size={32} />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">Mesajlaşmaya Başlayın</h2>
+                  <p className="text-gray-600">Sol taraftan bir danışman seçerek mesajlaşmaya başlayabilirsiniz.</p>
+                </motion.div>
               </div>
-            </div>
-            
-            <div className="bg-white border-t border-gray-200">
-              <MessageInput onSendMessage={handleSendMessage} />
-            </div>
+            )}
           </div>
         </div>
       </div>
