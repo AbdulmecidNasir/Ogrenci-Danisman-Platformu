@@ -4,7 +4,7 @@ Bu proje, üniversite öğrencileri ile danışmanları arasında güvenli, hız
 ## 📸 Uygulama Ekran Görüntüleri
 
 ### 🖥️ Student Sign In Page
-![Student Sign in Page](project/screenshots/StudentSignİn.png)
+![Student Sign in Page](screenshots/StudentSignİn.png)
 
 ### 🖥️ Student Sign Up Page
 ![Student Sign Up Page](screenshots/StudentSignUp.png)
