@@ -4,19 +4,19 @@ Bu proje, üniversite öğrencileri ile danışmanları arasında güvenli, hız
 ## 📸 Uygulama Ekran Görüntüleri
 
 ### 🖥️ Student Sign In Page
-![Student Sign in Page](project/screenshots/StudentSignIn.png)
+![Image Alt](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/fa136d955d3390ed89b440ab0e2ae7facddb8ca8/screenshoots/StudentSignIn.png))
 
 ### 🖥️ Student Sign Up Page
-![Student Sign Up Page](screenshots/StudentSignUp.png)
+![Image Alt](screenshots/StudentSignUp.png)
 
 ### 📱 Student Dashboard Page
-![Student Dashboard Page](screenshots/StudentDashboard.png)
+![Image Alt](screenshots/StudentDashboard.png)
 
 ### 🖥️ Student Message Page
-![Student Message Page](screenshots/StudentMessage.png)
+![Image Alt](screenshots/StudentMessage.png)
 
 ### 🖥️ Student Profile Page
-![Student Profile Page](screenshots/StudentProfile.png)
+![Student Profile Page](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/fa136d955d3390ed89b440ab0e2ae7facddb8ca8/screenshoots/StudentProfile.png)
 
 ### 📱 Advisor Dashboard Page
 ![Image Alt](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/736b03b3abbc673f7bd134347e0af6744711ccf1/screenshoots/AdvisorDashboard.png)
