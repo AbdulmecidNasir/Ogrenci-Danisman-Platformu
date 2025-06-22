@@ -4,25 +4,25 @@ Bu proje, üniversite öğrencileri ile danışmanları arasında güvenli, hız
 ## 📸 Uygulama Ekran Görüntüleri
 
 ### 🖥️ Student Sign In Page
-![Image Alt](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/fa136d955d3390ed89b440ab0e2ae7facddb8ca8/screenshoots/StudentSignIn.png))
+![Student Sign In Page](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/fa136d955d3390ed89b440ab0e2ae7facddb8ca8/screenshoots/StudentSignIn.png))
 
 ### 🖥️ Student Sign Up Page
-![Image Alt](screenshots/StudentSignUp.png)
+![Image Alt](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/94a850b8390caf6d84dac53b2a37c802096e363b/screenshoots/StudentSignUp.png)
 
 ### 📱 Student Dashboard Page
-![Image Alt](screenshots/StudentDashboard.png)
+![Student Sign Up Page](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/94a850b8390caf6d84dac53b2a37c802096e363b/screenshoots/StudentDashboard.png)
 
 ### 🖥️ Student Message Page
-![Image Alt](screenshots/StudentMessage.png)
+![Student Message Page](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/94a850b8390caf6d84dac53b2a37c802096e363b/screenshoots/StudentMessage.png)
 
 ### 🖥️ Student Profile Page
 ![Student Profile Page](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/fa136d955d3390ed89b440ab0e2ae7facddb8ca8/screenshoots/StudentProfile.png)
 
 ### 📱 Advisor Dashboard Page
-![Image Alt](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/736b03b3abbc673f7bd134347e0af6744711ccf1/screenshoots/AdvisorDashboard.png)
+![Advisor Dashboard Page](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/736b03b3abbc673f7bd134347e0af6744711ccf1/screenshoots/AdvisorDashboard.png)
 
 ### 🖥️ Advisor Message Page
-![Advisor Message Page](screenshots/AdvisorMessage.png)
+![Advisor Message Page](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/94a850b8390caf6d84dac53b2a37c802096e363b/screenshoots/AdvisorMessage.png)
 
 ### 📱 Advisor Profile Page
-![Advisor Profile Page](screenshots/AdvisorProfile.png)
+![Advisor Profile Page](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/94a850b8390caf6d84dac53b2a37c802096e363b/screenshoots/AdvisorProfile.png)
