@@ -19,7 +19,7 @@ Bu proje, üniversite öğrencileri ile danışmanları arasında güvenli, hız
 ![Student Profile Page](screenshots/StudentProfile.png)
 
 ### 📱 Advisor Dashboard Page
-![Advisor Dashboard Page]([screenshots/AdvisorDashboard.png](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/7f8e19d076d9f3c978b74b916b1c107ef6dfb118/screenshoots/AdvisorDashboard.png))
+![Image Alt](https://github.com/AbdulmecidNasir/Ogrenci-Danisman-Platformu/blob/736b03b3abbc673f7bd134347e0af6744711ccf1/screenshoots/AdvisorDashboard.png)
 
 ### 🖥️ Advisor Message Page
 ![Advisor Message Page](screenshots/AdvisorMessage.png)
