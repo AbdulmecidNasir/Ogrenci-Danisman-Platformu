@@ -1,5 +1,59 @@
-# Ogrenci-Danisman-Platformu
-Bu proje, üniversite öğrencileri ile danışmanları arasında güvenli, hızlı ve kullanıcı dostu bir iletişim platformu sunmayı amaçlar. Geleneksel e-posta veya mesajlaşma yöntemlerinin yerine; anlık mesajlaşma, dosya paylaşımı, okunmamış mesaj bildirimleri ve rol tabanlı erişim kontrolü gibi modern özelliklerle akademik iş akışını kolaylaştırır
+# 🎓 Öğrenci-Danışman İletişim Platformu
+
+## 🎯 Projenin Amacı
+
+Bu projenin amacı, üniversite öğrencileri ile danışmanları arasındaki iletişimi **kesintisiz ve güvenli** bir şekilde sağlamaktır.  
+Geleneksel yöntemlerin yerine kullanılabilecek modern bir platform oluşturarak aşağıdaki hedefleri gerçekleştirmeyi amaçlar:
+
+- **🔒 Erişim Kontrolü:**  
+  Rol tabanlı erişim sistemiyle yalnızca yetkili kişilerin ilgili bilgilere ulaşabilmesi garanti altına alınır.
+
+- **📑 Dosya ve Kaynak Paylaşımı:**  
+  Akademik materyallerin (notlar, belgeler, ödevler) hızlı ve kolay şekilde paylaşılmasını sağlar.
+
+- **💻 Kullanıcı Dostu Deneyim:**  
+  Modern animasyonlar ve kullanıcı dostu arayüzlerle platformun kullanımını kolaylaştırır.  
+  Böylece akademik süreçler daha **şeffaf**, **organize** ve **verimli** şekilde yürütülebilir.
+
+- **⚡ Hızlı İletişim:**  
+  Gerçek zamanlı mesajlaşma (Realtime Chat) ile öğrencilerin danışmanlarıyla hızlı ve etkili iletişim kurmasını sağlar.
+
+---
+
+## 🛠️ Teknolojik Altyapı
+
+Bu platform, modern ve güçlü teknolojiler kullanılarak geliştirilmiştir:
+
+- **Frontend:**
+  - React
+  - TypeScript
+  - Vite
+  - Tailwind CSS
+  - Framer Motion (Animasyonlar)
+
+- **Backend:**
+  - Node.js
+  - Express.js
+
+- **Database:**
+  - Microsoft SQL Server  
+    (İlişkisel veri tabanı yapısıyla veriler düzenli ve güvenli bir şekilde saklanır.)
+
+---
+
+## 🚀 Avantajlar ve Katkılar
+
+- ⚡ **Geliştirme sürecini hızlandıran** modern altyapı.
+- 🎨 **Responsive ve animasyonlu arayüz** tasarımları.
+- 📦 Güvenli dosya paylaşım altyapısı.
+- 🛡️ Rol tabanlı yetkilendirme ile veri güvenliği.
+- 📱 Gerçek zamanlı hızlı mesajlaşma özelliği.
+- 🗂️ Akademik süreçleri şeffaf ve organize yönetebilme imkânı.
+
+---
+
+> 📌 Bu proje, hem teknik altyapısı hem de kullanıcı deneyimi açısından modern gereksinimleri karşılayan, öğrenci-danışman iletişimini dijitalleştiren etkili bir platformdur.
+
 
 ## 📸 Uygulama Ekran Görüntüleri
 
